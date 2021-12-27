@@ -1,0 +1,31 @@
+<html>
+    <body>
+        <h1>{{ .Token }}</h1>
+
+        <p>
+            Will display queries to <code>*.{{ .Token }}.{{ .Domain }}</code>, e.g <code>nslookup hello.{{ .Token }}.{{ .Domain }}</code>.
+        </p>
+
+        {{ if .HasQueries }}
+            <p>Oh noes! There are queries!</p>
+            <table border="1">
+            <thead>
+                <th>Timestamp</th>
+                <th>TX ID</th>
+                <th>Type</th>
+                <th>Name</th>
+            </thead>
+            {{ range .Queries }}
+                <tr>
+                    <td>{{ .When }}</td>
+                    <td>{{ .TxID }}</td>
+                    <td>{{ .QType }}</td>
+                    <td>{{ .Name }}</td>
+                </tr>
+            {{ end }}
+            </table>
+        {{ else }}
+            <p>No queries. Yay!</p>
+        {{ end }}
+    </body>
+</html>
