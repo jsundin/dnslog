@@ -11,15 +11,19 @@ import (
 )
 
 type query_t struct {
-	When  string
-	TxID  uint16
-	QType string
-	Name  string
+	When  string `json:"timestamp"`
+	TxID  uint16 `json:"txid"`
+	QType string `json:"type"`
+	Name  string `json:"name"`
 }
 
 type context_t struct {
-	domain string
+	domain     string
+	forward    bool
+	forwardDNS string
 }
+
+const resolvConf = "/etc/resolv.conf"
 
 var result_lock *sync.Mutex = &sync.Mutex{}
 var results map[string][]query_t = make(map[string][]query_t)
@@ -70,6 +74,8 @@ func main() {
 	flag.IntVar(&dnsPort, "dns", 1053, "dns port")
 	flag.IntVar(&httpPort, "http", 8080, "http port")
 	flag.StringVar(&ctx.domain, "domain", "dnslog.lab.", "domain (with a . at the end)")
+	flag.BoolVar(&ctx.forward, "forward", false, "forward non-domain queries to upstream dns")
+	flag.StringVar(&ctx.forwardDNS, "upstream", "", "which upstream dns to use (defaults to whatever is in resolv.conf, e.g 'ns.server.com:53', port optional)")
 	flag.StringVar(&logLevel, "level", "info", "loglevel")
 	flag.Parse()
 
@@ -77,6 +83,10 @@ func main() {
 		logrus.Panicf("bad loglevel: '%s'", logLevel)
 	} else {
 		logrus.SetLevel(lvl)
+	}
+
+	if ctx.forwardDNS != "" && !ctx.forward {
+		logrus.Panicf("upstream dns can only be set if forward is enabled")
 	}
 
 	if !strings.HasSuffix(ctx.domain, ".") {
